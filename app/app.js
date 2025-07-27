@@ -3,16 +3,16 @@ const app = express()
 const mongoose = require('mongoose')
 const User = require('../model/User')
 const bcrypt = require('bcrypt')
-const { registration, login } = require('../controller/controller')
+const router = require('../router/index')
+
 
 //middleware
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
 
 
-// routers
-app.post('/registration', registration)
-app.post('/login', login)
+// router
+app.use(router)
 
 
 
