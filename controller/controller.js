@@ -9,7 +9,7 @@ exports.registration = async (req, res, next) => {
       return res.status(400).json({ massage: "Invalid Request" });
     }
 
-    const user = await registerService({ name, email, password });
+    const user = await registerService({ name, email, password, roles, accountStatus });
 
     return res.status(201).json({ massage: "User Created", user });
   } catch (e) {
