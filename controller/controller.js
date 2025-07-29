@@ -1,37 +1,30 @@
-const User = require("../model/User");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const { registerService } = require('../service/sAuth')
+const { registerService, loginService } = require("../service/sAuth");
 
 // Registration
-exports.registration = async (req, res) => {
-  const { name, email, password } = req.body;
+exports.registration = async (req, res, next) => {
+  try {
+    const { name, email, password } = req.body;
+    // find empty field
+    if (!name || !email || !password) {
+      return res.status(400).json({ massage: "Invalid Request" });
+    }
 
-  // find empty field
-  if (!name || !email || !password) {
-    return res.status(400).json({ massage: "Invalid Request" });
+    const user = await registerService({ name, email, password });
+
+    return res.status(201).json({ massage: "User Created", user });
+  } catch (e) {
+    next(e);
   }
-  
-  const user = registerService(name, email, password)
-  return res.status(201).json({ massage: "User Created", user });
 };
 
 // Login
-exports.login = async (req, res) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
-  if (!user) {
-    return res.status(400).json({ massage: "Invalid Credential" });
-  }
+exports.login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
 
-  // compare hash-password
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) {
-    return res.status(400).json({ massage: "Invalid credential" });
+    const token = await loginService({ email, password });
+    return res.status(200).json({ massage: "Login Success", token });
+  } catch (e) {
+    next(e);
   }
-
-  delete user._doc.password; // don't want to show password user screen
-  // create token
-  const token = jwt.sign(user._doc, "secret", { expiresIn: "2h" });
-  return res.status(200).json({ massage: "Login Success", token });
 };

@@ -1,26 +1,37 @@
-const User = require("../model/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { findUserByProperty, createNewUser } = require("../service/sUser");
+const error = require("../utils/error");
 
-const registerService = async ({name, email, password}) => {
- const checkEmail = await User.findOne({ email });
+const registerService = async ({ name, email, password }) => {
 
-  if (checkEmail) {
-    const error = new Error("User exist")
-    error.status = 400
-    throw error
-  }
-  // create user
-  const salt = await bcrypt.genSalt(10);
-  const hashPass = await bcrypt.hash(password, salt);
+    const checkEmail = await findUserByProperty("email", email);
 
-  const user = User({ name, email, password });
-  user.password = hashPass;
-  await user.save();
+    if (checkEmail) throw error("User exist", 400);
+    // create user
+    const salt = await bcrypt.genSalt(10);
+    const hashPass = await bcrypt.hash(password, salt);
+
+    return createNewUser({ name: name, email: email, password: hashPass });
+  
 };
 
-const loginService = async (email, password) => {
-  
+const loginService = async ({ email, password }) => {
+    const user = await findUserByProperty('email', email );
+
+    if (!user) {
+      throw error('Invalid Credential', 400)
+    }
+
+    // compare hash-password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      throw error('Invalid Credential', 400)
+    }
+
+    delete user._doc.password; // don't want to show password user screen
+    // create token
+    return (token = jwt.sign(user._doc, "secret", { expiresIn: "2h" }));
 };
 
 module.exports = {
