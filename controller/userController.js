@@ -83,7 +83,7 @@ const userUpdateById = async (req, res, next) => {
 
 const userDeleteById = async (req, res, next) => {
   try {
-    const id = req.params.id;
+    const id = req.params.id; 
     const user = await serviceUser.findUserByProperty("_id", id);
 
     if(!user) {
